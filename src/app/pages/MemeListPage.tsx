@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { MemeGrid } from '../components/MemeGrid';
+import { SortControls } from '../components/SortControls';
 import { useMemes, type UseMemesOptions } from '../hooks/useMemes';
+import { getSortOptions, type MemeSortPreset } from '../utils/memeSort';
 
 interface MemeListPageProps {
   title: string;
   refreshToken: number;
   options?: UseMemesOptions;
   emptyMessage?: string;
+  sortable?: boolean;
 }
 
 export function MemeListPage({
@@ -13,18 +17,21 @@ export function MemeListPage({
   refreshToken,
   options = {},
   emptyMessage,
+  sortable = false,
 }: MemeListPageProps) {
-  const { memes, loading, refresh } = useMemes(options, refreshToken);
+  const [sortPreset, setSortPreset] = useState<MemeSortPreset>('mostCopied');
+  const sortOptions = sortable ? getSortOptions(sortPreset) : {};
+  const { memes, loading, refresh } = useMemes({ ...options, ...sortOptions }, refreshToken);
 
   if (loading) {
     return (
-      <div>
-        <h2 className="mb-3 text-lg font-semibold text-memepot-text">{title}</h2>
-        <div className="grid grid-cols-3 gap-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+      <div aria-label={`Loading ${title}`}>
+        {sortable && <SortControls value={sortPreset} onChange={setSortPreset} />}
+        <div className="grid grid-cols-4 gap-2.5">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div
               key={i}
-              className="aspect-square animate-pulse rounded-lg bg-memepot-surface"
+              className="size-20 animate-pulse rounded-lg bg-white"
             />
           ))}
         </div>
@@ -34,14 +41,7 @@ export function MemeListPage({
 
   return (
     <div>
-      <h2 className="mb-3 text-lg font-semibold text-memepot-text">
-        {title}
-        {memes.length > 0 && (
-          <span className="ml-2 text-sm font-normal text-memepot-muted">
-            ({memes.length})
-          </span>
-        )}
-      </h2>
+      {sortable && <SortControls value={sortPreset} onChange={setSortPreset} />}
       <MemeGrid memes={memes} onChanged={refresh} emptyMessage={emptyMessage} />
     </div>
   );

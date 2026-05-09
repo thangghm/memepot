@@ -1,6 +1,7 @@
 // Background Service Worker — minimal shell
 import { setupContextMenu } from './context-menu';
 import { db } from '@/shared/db';
+import { memeService } from '@/features/memes/services/meme.service';
 
 console.log('[Memepot] Service worker starting...');
 
@@ -12,7 +13,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 // Handle GET_MEMES from popup
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === 'GET_MEMES') {
-    db.memes.toArray().then((memes) => {
+    memeService.getAll().then((memes) => {
       sendResponse({ success: true, memes });
     });
     return true; // async

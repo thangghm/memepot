@@ -18,10 +18,11 @@ export function Routes({ activeView, refreshToken, searchQuery }: RoutesProps) {
     case 'favorites':
       return (
         <MemeListPage
-          title="Favorites"
+          title="Hot"
           refreshToken={refreshToken}
-          options={{ favorite: true, query: searchQuery, sort: 'created', status: 'active' }}
-          emptyMessage="No favorite memes yet."
+          options={{ favorite: true, query: searchQuery, status: 'active' }}
+          emptyMessage="No Hot memes yet."
+          sortable
         />
       );
     case 'hotpot':
@@ -29,8 +30,9 @@ export function Routes({ activeView, refreshToken, searchQuery }: RoutesProps) {
         <MemeListPage
           title="HotPot"
           refreshToken={refreshToken}
-          options={{ query: searchQuery, sort: 'used', status: 'active', usedOnly: true }}
+          options={{ favorite: true, query: searchQuery, status: 'active' }}
           emptyMessage="No HotPot memes yet."
+          sortable
         />
       );
     case 'trash':

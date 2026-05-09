@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Heart, RotateCcw, Tag, Trash2 } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { MemeCard } from './MemeCard';
 import type { Meme, MemeStatus } from '@/features/memes/types/meme.types';
 import { useMemeActions } from '../hooks/useMemeActions';
 import { useSettings } from '../hooks/useSettings';
 import { TagMemeModal } from './TagMemeModal';
+import favoriteIcon from '../assets/figma/action-favorite.svg';
+import tagIcon from '../assets/figma/action-tag.svg';
+import trashIcon from '../assets/figma/action-trash.svg';
 
 interface MemeGridProps {
   memes?: Meme[];
@@ -31,7 +34,7 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
     small: 'grid-cols-4',
     medium: 'grid-cols-3',
     large: 'grid-cols-2',
-  }[settings?.gridSize ?? 'medium'];
+  }[settings?.gridSize ?? 'small'];
   const contextMeme = contextMenu ? memes.find((meme) => meme.id === contextMenu.memeId) : null;
 
   useEffect(() => {
@@ -114,7 +117,7 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
     })();
   };
 
-  const handleDelete = (memeId: string) => {
+  const handleKick = (memeId: string) => {
     const meme = memes.find((item) => item.id === memeId);
     if (!meme) {
       return;
@@ -131,7 +134,7 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
       return;
     }
 
-    void runAction(() => actions.trash(memeId), 'Moved to Trash.');
+    void runAction(() => actions.trash(memeId), 'Kicked.');
   };
 
   const handleRestore = (memeId: string) => {
@@ -180,8 +183,10 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
 
   if (memes.length === 0) {
     return (
-      <div className="flex h-48 items-center justify-center">
-        <p className="text-center text-sm text-memepot-muted">{emptyMessage}</p>
+      <div className="flex h-full min-h-48 items-center justify-center">
+        <p className="max-w-64 text-center text-sm leading-none text-memepot-back/60">
+          {emptyMessage}
+        </p>
       </div>
     );
   }
@@ -189,18 +194,18 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
   return (
     <>
       {(actionError || actionMessage) && (
-        <p className={`mb-2 text-xs ${actionError ? 'text-red-400' : 'text-emerald-400'}`} role="status">
+        <p className={`mb-2 text-xs ${actionError ? 'text-red-700' : 'text-memepot-primary'}`} role="status">
           {actionError ?? actionMessage}
         </p>
       )}
 
       {selectedIds.length > 0 && (
-        <div className="mb-2 flex items-center gap-2 rounded bg-memepot-surface px-2 py-1.5">
-          <span className="text-xs text-memepot-muted">{selectedIds.length} selected</span>
+        <div className="mb-2 flex items-center gap-2 rounded-[10px] bg-white px-2 py-1.5">
+          <span className="text-xs text-memepot-back/70">{selectedIds.length} selected</span>
           <button
             type="button"
             onClick={handleBatchDelete}
-            className="ml-auto rounded bg-red-500 px-2 py-1 text-xs font-medium text-white hover:bg-red-600"
+            className="ml-auto rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
           >
             Delete
           </button>
@@ -208,7 +213,7 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
             <button
               type="button"
               onClick={handleBatchRestore}
-              className="rounded bg-emerald-500 px-2 py-1 text-xs font-medium text-white hover:bg-emerald-600"
+              className="rounded bg-memepot-primary px-2 py-1 text-xs text-white hover:opacity-90"
             >
               Restore
             </button>
@@ -216,14 +221,14 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
           <button
             type="button"
             onClick={() => setSelectedIds([])}
-            className="rounded px-2 py-1 text-xs text-memepot-muted hover:bg-memepot-accent/30 hover:text-memepot-text"
+            className="rounded px-2 py-1 text-xs text-memepot-back/70 hover:bg-memepot-neutral-1"
           >
             Clear
           </button>
         </div>
       )}
 
-      <div className={`grid ${gridClassName} gap-2`}>
+      <div className={`grid ${gridClassName} gap-2.5`}>
         {memes.map((meme) => (
           <MemeCard
             key={meme.id}
@@ -233,13 +238,14 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
             onCopy={handleCopy}
             onContextMenu={(memeId, x, y) => setContextMenu({ memeId, x, y })}
             onToggleSelect={handleToggleSelect}
+            showTags={settings?.showTags ?? true}
           />
         ))}
       </div>
 
       {contextMenu && contextMeme && (
         <div
-          className="fixed z-50 min-w-36 rounded bg-memepot-surface py-1 text-sm shadow-xl ring-1 ring-black/30"
+          className="fixed z-50 min-w-36 rounded-[10px] bg-white py-1 text-sm shadow-xl ring-1 ring-black/10"
           style={{ left: contextMenu.x, top: contextMenu.y }}
           onClick={(event) => event.stopPropagation()}
         >
@@ -247,41 +253,46 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
             <button
               type="button"
               onClick={() => handleRestore(contextMeme.id)}
-              className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-text hover:bg-memepot-accent/40"
-            >
-              <RotateCcw size={14} aria-hidden />
-              Restore
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-primary hover:bg-memepot-neutral-1"
+              >
+                <RotateCcw size={14} aria-hidden />
+                Restore
             </button>
           ) : (
             <>
               <button
                 type="button"
                 onClick={() => openTagEditor(contextMeme.id)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-text hover:bg-memepot-accent/40"
+                className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-primary hover:bg-memepot-neutral-1"
               >
-                <Tag size={14} aria-hidden />
+                <img src={tagIcon} alt="" className="size-4" aria-hidden />
                 Tag
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setContextMenu(null);
-                  void runAction(() => actions.favorite(contextMeme.id));
-                }}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-text hover:bg-memepot-accent/40"
-              >
-                <Heart size={14} aria-hidden />
-                {contextMeme.favorite ? 'Unfavorite' : 'Favorite'}
-              </button>
+              {contextMeme.status !== 'inbox' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setContextMenu(null);
+                    void runAction(
+                      () => actions.makeHot(contextMeme.id),
+                      contextMeme.favorite ? 'Removed Hot mark.' : 'Made Hot.',
+                    );
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-primary hover:bg-memepot-neutral-1"
+                >
+                  <img src={favoriteIcon} alt="" className="size-4" aria-hidden />
+                  {contextMeme.favorite ? 'Unmake Hot' : 'Make it Hot'}
+                </button>
+              )}
             </>
           )}
           <button
             type="button"
-            onClick={() => handleDelete(contextMeme.id)}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-red-300 hover:bg-red-500/20"
+            onClick={() => handleKick(contextMeme.id)}
+            className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-primary hover:bg-memepot-neutral-1"
           >
-            <Trash2 size={14} aria-hidden />
-            {contextMeme.status === 'trash' ? 'Delete Forever' : 'Move to Trash'}
+            <img src={trashIcon} alt="" className="size-4" aria-hidden />
+            {contextMeme.status === 'trash' ? 'Delete Forever' : 'Kick'}
           </button>
         </div>
       )}

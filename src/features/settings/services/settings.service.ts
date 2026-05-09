@@ -8,15 +8,17 @@ export interface Settings {
   theme: 'light' | 'dark' | 'system';
   maxImageSize: number;
   closeAfterCopy: boolean;
+  showTags: boolean;
 }
 
 const DEFAULTS: Settings = {
   defaultCopyFormat: 'image/png',
   lastView: 'tempot',
-  gridSize: 'medium',
+  gridSize: 'small',
   theme: 'dark',
   maxImageSize: 20 * 1024 * 1024,
   closeAfterCopy: false,
+  showTags: true,
 };
 
 export class SettingsService {

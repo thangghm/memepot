@@ -3,14 +3,21 @@ module.exports = {
   content: ['./src/**/*.{ts,tsx,html}'],
   theme: {
     extend: {
+      fontFamily: {
+        memepot: ['Gveret Levin', 'cursive'],
+      },
       colors: {
         memepot: {
-          bg: '#1a1a2e',
-          surface: '#16213e',
-          primary: '#e94560',
-          accent: '#0f3460',
-          text: '#eaeaea',
-          muted: '#8892a0',
+          bg: '#ccd0d2',
+          surface: '#c4c4c4',
+          primary: '#0000ff',
+          accent: '#c4c4c4',
+          text: '#000000',
+          muted: '#c4c4c4',
+          back: '#000000',
+          white: '#ffffff',
+          'neutral-1': '#ccd0d2',
+          'neutral-2': '#c4c4c4',
         },
       },
     },

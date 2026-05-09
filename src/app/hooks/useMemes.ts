@@ -6,7 +6,9 @@ export interface UseMemesOptions {
   status?: MemeStatus;
   favorite?: boolean;
   sort?: 'created' | 'frequent' | 'used';
+  sortDirection?: 'asc' | 'desc';
   includeTrash?: boolean;
+  taggedOnly?: boolean;
   usedOnly?: boolean;
   query?: string;
 }
@@ -59,6 +61,10 @@ function filterAndSortMemes(memes: Meme[], options: UseMemesOptions) {
     nextMemes = nextMemes.filter((meme) => meme.favorite === options.favorite);
   }
 
+  if (options.taggedOnly) {
+    nextMemes = nextMemes.filter((meme) => meme.tags.length > 0);
+  }
+
   if (options.usedOnly) {
     nextMemes = nextMemes.filter((meme) => meme.usageCount > 0 || Boolean(meme.lastUsedAt));
   }
@@ -67,18 +73,22 @@ function filterAndSortMemes(memes: Meme[], options: UseMemesOptions) {
     nextMemes = nextMemes.filter((meme) => matchesSearch(meme, options.query ?? ''));
   }
 
+  const direction = options.sortDirection ?? 'desc';
+  const sortDate = (a: string, b: string) => (
+    direction === 'desc' ? b.localeCompare(a) : a.localeCompare(b)
+  );
+  const sortNumber = (a: number, b: number) => (direction === 'desc' ? b - a : a - b);
+
   switch (options.sort) {
     case 'frequent':
-      nextMemes.sort(
-        (a, b) => b.usageCount - a.usageCount || getUsedTimestamp(b).localeCompare(getUsedTimestamp(a)),
-      );
+      nextMemes.sort((a, b) => sortNumber(a.usageCount, b.usageCount) || sortDate(a.createdAt, b.createdAt));
       break;
     case 'used':
-      nextMemes.sort((a, b) => getUsedTimestamp(b).localeCompare(getUsedTimestamp(a)));
+      nextMemes.sort((a, b) => sortDate(getUsedTimestamp(a), getUsedTimestamp(b)));
       break;
     case 'created':
     default:
-      nextMemes.sort((a, b) => getCreatedTimestamp(b).localeCompare(getCreatedTimestamp(a)));
+      nextMemes.sort((a, b) => sortDate(getCreatedTimestamp(a), getCreatedTimestamp(b)));
       break;
   }
 
@@ -88,7 +98,7 @@ function filterAndSortMemes(memes: Meme[], options: UseMemesOptions) {
 export function useMemes(options: UseMemesOptions = {}, refreshToken = 0) {
   const [memes, setMemes] = useState<Meme[]>([]);
   const [loading, setLoading] = useState(true);
-  const { favorite, includeTrash, query, sort, status, usedOnly } = options;
+  const { favorite, includeTrash, query, sort, sortDirection, status, taggedOnly, usedOnly } = options;
 
   const fetchMemes = useCallback(async () => {
     setLoading(true);
@@ -101,7 +111,9 @@ export function useMemes(options: UseMemesOptions = {}, refreshToken = 0) {
             includeTrash,
             query,
             sort,
+            sortDirection,
             status,
+            taggedOnly,
             usedOnly,
           }),
         );
@@ -111,7 +123,7 @@ export function useMemes(options: UseMemesOptions = {}, refreshToken = 0) {
     } finally {
       setLoading(false);
     }
-  }, [favorite, includeTrash, query, sort, status, usedOnly]);
+  }, [favorite, includeTrash, query, sort, sortDirection, status, taggedOnly, usedOnly]);
 
   useEffect(() => {
     fetchMemes();

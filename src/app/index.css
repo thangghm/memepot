@@ -2,8 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: 'Gveret Levin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/GveretLevin-Regular.woff2') format('woff2');
+}
+
 body {
-  @apply bg-memepot-bg text-memepot-text font-sans m-0 p-0;
+  @apply m-0 bg-memepot-neutral-1 p-0 font-memepot text-memepot-back;
   width: 400px;
   height: 600px;
+}
+
+.memepot-scroll {
+  scrollbar-color: #0000ff #ccd0d2;
+  scrollbar-width: thin;
+}
+
+.memepot-scroll::-webkit-scrollbar {
+  width: 7px;
+}
+
+.memepot-scroll::-webkit-scrollbar-track {
+  background: #ccd0d2;
+}
+
+.memepot-scroll::-webkit-scrollbar-thumb {
+  background: #0000ff;
 }

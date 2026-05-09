@@ -10,8 +10,8 @@ export function useMemeActions() {
     await clipboardService.copyImage(memeId);
   }, []);
 
-  const favorite = useCallback(async (memeId: string) => {
-    console.log('[useMemeActions] favorite:', memeId);
+  const makeHot = useCallback(async (memeId: string) => {
+    console.log('[useMemeActions] make hot:', memeId);
     await memeService.toggleFavorite(memeId);
   }, []);
 
@@ -35,5 +35,5 @@ export function useMemeActions() {
     await memeService.update(memeId, updates);
   }, []);
 
-  return { copy, favorite, trash, restore, delete: deleteMeme, update };
+  return { copy, makeHot, trash, restore, delete: deleteMeme, update };
 }

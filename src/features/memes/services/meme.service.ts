@@ -3,6 +3,8 @@ import { db } from '@/shared/db';
 import type { Meme, MemeFilter, MemeStats } from '../types/meme.types';
 import { generateId, now } from '@/shared/utils/id';
 
+const TEMPOT_AUTO_CLEAR_MS = 48 * 60 * 60 * 1000;
+
 export class MemeService {
   async create(_data: Omit<Meme, 'id' | 'createdAt' | 'updatedAt' | 'usageCount' | 'favorite' | 'status'>): Promise<string> {
     const id = generateId();
@@ -32,7 +34,13 @@ export class MemeService {
   async toggleFavorite(_memeId: string): Promise<void> {
     const meme = await db.memes.get(_memeId);
     if (meme) {
-      await db.memes.update(_memeId, { favorite: !meme.favorite, updatedAt: now() });
+      const timestamp = now();
+      const shouldMakeHot = !meme.favorite;
+
+      await db.memes.update(_memeId, {
+        favorite: shouldMakeHot,
+        updatedAt: timestamp,
+      });
     }
   }
 
@@ -48,6 +56,8 @@ export class MemeService {
   }
 
   async getAll(_filter?: MemeFilter): Promise<Meme[]> {
+    await this.clearExpiredTempotMemes();
+
     let collection = db.memes.toCollection();
     if (_filter?.status) {
       collection = db.memes.where('status').equals(_filter.status);
@@ -60,6 +70,8 @@ export class MemeService {
   }
 
   async getStats(): Promise<MemeStats> {
+    await this.clearExpiredTempotMemes();
+
     const all = await db.memes.toArray();
     return {
       total: all.length,
@@ -94,6 +106,27 @@ export class MemeService {
   async getThumbnail(_memeId: string): Promise<Blob | undefined> {
     const thumb = await db.memeThumbnails.where('memeId').equals(_memeId).first();
     return thumb?.blob;
+  }
+
+  private async clearExpiredTempotMemes(): Promise<void> {
+    const expiresBefore = Date.now() - TEMPOT_AUTO_CLEAR_MS;
+    const expiredMemes = await db.memes
+      .where('status')
+      .equals('inbox')
+      .filter((meme) => new Date(meme.createdAt).getTime() <= expiresBefore)
+      .toArray();
+
+    if (expiredMemes.length === 0) {
+      return;
+    }
+
+    const expiredIds = expiredMemes.map((meme) => meme.id);
+
+    await db.transaction('rw', db.memes, db.memeBlobs, db.memeThumbnails, async () => {
+      await db.memes.bulkDelete(expiredIds);
+      await db.memeBlobs.where('memeId').anyOf(expiredIds).delete();
+      await db.memeThumbnails.where('memeId').anyOf(expiredIds).delete();
+    });
   }
 }
 

@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { useMemes } from '../hooks/useMemes';
 import { MemeGrid } from '../components/MemeGrid';
+import { SortControls } from '../components/SortControls';
+import { getSortOptions, type MemeSortPreset } from '../utils/memeSort';
 
 interface PotPageProps {
   refreshToken: number;
@@ -7,20 +10,21 @@ interface PotPageProps {
 }
 
 export function PotPage({ refreshToken, searchQuery }: PotPageProps) {
+  const [sortPreset, setSortPreset] = useState<MemeSortPreset>('newest');
   const { memes, loading, refresh } = useMemes(
-    { query: searchQuery, sort: 'created', status: 'active' },
+    { query: searchQuery, status: 'active', taggedOnly: true, ...getSortOptions(sortPreset) },
     refreshToken,
   );
 
   if (loading) {
     return (
       <div>
-        <h2 className="mb-3 text-lg font-semibold text-memepot-text">Pot</h2>
-        <div className="grid grid-cols-3 gap-2">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+        <SortControls value={sortPreset} onChange={setSortPreset} />
+        <div className="grid grid-cols-4 gap-2.5">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
             <div
               key={i}
-              className="aspect-square animate-pulse rounded-lg bg-memepot-surface"
+              className="size-20 animate-pulse rounded-lg bg-white"
             />
           ))}
         </div>
@@ -30,14 +34,7 @@ export function PotPage({ refreshToken, searchQuery }: PotPageProps) {
 
   return (
     <div>
-      <h2 className="mb-3 text-lg font-semibold text-memepot-text">
-        Pot
-        {memes.length > 0 && (
-          <span className="ml-2 text-sm font-normal text-memepot-muted">
-            ({memes.length})
-          </span>
-        )}
-      </h2>
+      <SortControls value={sortPreset} onChange={setSortPreset} />
       <MemeGrid
         memes={memes}
         onChanged={refresh}

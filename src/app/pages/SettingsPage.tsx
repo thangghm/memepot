@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useSettings } from '../hooks/useSettings';
+import dropdownArrow from '../assets/figma/dropdown-arrow.svg';
 import type { Settings } from '@/features/settings/services/settings.service';
 
 export function SettingsPage() {
@@ -19,65 +20,101 @@ export function SettingsPage() {
     [update],
   );
 
+  const handleShowTagsChange = useCallback(
+    (checked: boolean) => {
+      void update({ showTags: checked });
+    },
+    [update],
+  );
+
   if (loading) {
     return (
-      <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-memepot-text">Settings</h2>
-        <div className="h-8 animate-pulse rounded bg-memepot-surface" />
+      <div className="h-full animate-pulse rounded-[10px] bg-memepot-neutral-2" aria-label="Loading settings">
+        <div className="h-16 w-40 rounded-[10px] bg-white/70" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold text-memepot-text">Settings</h2>
+    <div className="flex h-full flex-col gap-5 overflow-hidden rounded-[10px] bg-memepot-neutral-1 text-memepot-back">
+      <section className="flex shrink-0 flex-col gap-4">
+        <div className="flex h-16 items-center px-2.5">
+          <h2 className="text-[32px] leading-none text-memepot-primary">Setting</h2>
+        </div>
 
-      <div className="space-y-2">
-        <label className="block text-sm text-memepot-muted" htmlFor="grid-size">
-          Grid Size
+        <label className="flex items-center justify-between px-2.5 text-lg leading-none">
+          <span>Close after copy</span>
+          <input
+            type="checkbox"
+            checked={settings?.closeAfterCopy ?? false}
+            onChange={(event) => handleCloseAfterCopyChange(event.target.checked)}
+            className="size-8 appearance-none rounded-[5px] border-2 border-memepot-primary bg-white checked:bg-memepot-primary checked:bg-[linear-gradient(135deg,transparent_38%,white_38%,white_50%,transparent_50%),linear-gradient(45deg,transparent_48%,white_48%,white_60%,transparent_60%)] focus:outline-none focus:ring-2 focus:ring-memepot-primary/30"
+          />
         </label>
-        <select
-          id="grid-size"
-          className="w-full rounded bg-memepot-surface px-3 py-1.5 text-sm text-memepot-text outline-none focus:ring-1 focus:ring-memepot-primary"
-          value={settings?.gridSize ?? 'medium'}
-          onChange={(event) => handleGridChange(event.target.value)}
-        >
-          <option value="small">Small</option>
-          <option value="medium">Medium</option>
-          <option value="large">Large</option>
-        </select>
-      </div>
 
-      <label className="flex items-center gap-2 rounded bg-memepot-surface px-3 py-2 text-sm text-memepot-text">
-        <input
-          type="checkbox"
-          checked={settings?.closeAfterCopy ?? false}
-          onChange={(event) => handleCloseAfterCopyChange(event.target.checked)}
-          className="size-4 rounded border-memepot-accent bg-memepot-bg text-memepot-primary focus:ring-memepot-primary"
-        />
-        <span>Close after copy</span>
-      </label>
-
-      <div className="space-y-2">
-        <label className="block text-sm text-memepot-muted" htmlFor="license-key">
-          License Key
+        <label className="flex items-center justify-between px-2.5 text-lg leading-none">
+          <span>Show tag</span>
+          <input
+            type="checkbox"
+            checked={settings?.showTags ?? true}
+            onChange={(event) => handleShowTagsChange(event.target.checked)}
+            className="size-8 appearance-none rounded-[5px] border-2 border-memepot-primary bg-white checked:bg-memepot-primary checked:bg-[linear-gradient(135deg,transparent_38%,white_38%,white_50%,transparent_50%),linear-gradient(45deg,transparent_48%,white_48%,white_60%,transparent_60%)] focus:outline-none focus:ring-2 focus:ring-memepot-primary/30"
+          />
         </label>
-        <input
-          id="license-key"
-          type="text"
-          value="Coming soon"
-          disabled
-          readOnly
-          className="w-full cursor-not-allowed rounded bg-memepot-surface/70 px-3 py-1.5 text-sm text-memepot-muted outline-none"
-        />
-        <p className="text-xs text-memepot-muted">
-          License activation is not available in this intro build.
+
+        <div className="flex items-center justify-between px-2.5 text-lg leading-none">
+          <label htmlFor="grid-size">Grid size</label>
+          <div className="relative h-9 w-32 rounded-[10px] bg-white">
+            <select
+              id="grid-size"
+              className="h-9 w-full appearance-none rounded-[10px] bg-transparent px-2.5 pr-8 text-center text-lg leading-none text-memepot-primary outline-none"
+              value={settings?.gridSize ?? 'small'}
+              onChange={(event) => handleGridChange(event.target.value)}
+            >
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+            <img
+              src={dropdownArrow}
+              alt=""
+              className="pointer-events-none absolute right-2.5 top-1/2 h-2 w-[13px] -translate-y-1/2"
+              aria-hidden
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="flex flex-col gap-2.5">
+        <div className="px-2.5">
+          <h2 className="text-[32px] leading-none text-memepot-primary">Activation</h2>
+        </div>
+        <div className="flex h-[42px] items-center gap-2.5">
+          <label className="flex h-[42px] min-w-0 flex-1 items-center rounded-[10px] bg-white px-2.5">
+            <span className="sr-only">License key</span>
+            <input
+              type="text"
+              placeholder="Pot your key here"
+              disabled
+              className="w-full bg-transparent text-base leading-none text-memepot-back outline-none placeholder:text-memepot-neutral-2 disabled:cursor-not-allowed"
+            />
+          </label>
+          <button
+            type="button"
+            disabled
+            className="flex h-[42px] w-[98px] cursor-not-allowed items-center justify-center rounded-[10px] bg-memepot-primary text-lg leading-none text-white opacity-70"
+          >
+            Active
+          </button>
+        </div>
+        <p className="whitespace-pre-wrap px-2.5 text-sm leading-none">
+          You need to be a Potter (like Harry) to use advanced features like: Auto-Tagging, OCR
+          Tagging, and Semantic Search.
+          {'\n\n'}
+          Don&apos;t worry bro, it&apos;s free; you just need to sign up and get your key:{' '}
+          <span className="text-memepot-primary">https://memepot.nodehub.studio</span>
         </p>
-      </div>
-
-      <p className="border-t border-memepot-accent/20 pt-3 text-xs text-memepot-muted">
-        Nodehub.Studio (c) 2026
-      </p>
+      </section>
     </div>
   );
 }
