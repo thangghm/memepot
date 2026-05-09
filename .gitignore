@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.DS_Store
+*.local
+.claude/
+AGENTS.md
+01-share-docs/

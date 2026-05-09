@@ -1,0 +1,1 @@
+export { MemeService } from './services/meme.service';

@@ -1,0 +1,1 @@
+export type { Settings } from '../services/settings.service';

@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-memepot-bg text-memepot-text font-sans m-0 p-0;
+  width: 400px;
+  height: 600px;
+}
