@@ -17,6 +17,8 @@ export interface Meme {
   originalBlobId: string;
   thumbnailBlobId: string;
   mimeType: MemeMimeType;
+  contentHash?: string;
+  perceptualHash?: string;
   width?: number;
   height?: number;
   sizeBytes?: number;

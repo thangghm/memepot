@@ -6,6 +6,8 @@ import { ThumbnailService } from './thumbnail.service';
 import { MAX_IMAGE_SIZE } from '@/shared/constants';
 import { UnsupportedFileTypeError, ImageTooLargeError, ImageFetchFailedError } from '@/shared/errors';
 import { normalizeImportedImage } from '../utils/image-normalizer';
+import { duplicateService } from './duplicate.service';
+import type { MemeImportResult } from '../types/import-result.types';
 
 const SUPPORTED_TYPES: MemeMimeType[] = ['image/png', 'image/jpeg', 'image/webp'];
 
@@ -16,13 +18,13 @@ export class ImportService {
     _srcUrl: string,
     _pageUrl?: string,
     _sourceType: MemeSourceType = 'web',
-  ): Promise<string> {
+  ): Promise<MemeImportResult> {
     // TODO(Milestone 3): fetch URL, validate, generate thumbnail, save
     console.log('[ImportService] importFromUrl stub:', _srcUrl);
     throw new ImageFetchFailedError();
   }
 
-  async importFromFile(_file: File): Promise<string> {
+  async importFromFile(_file: File): Promise<MemeImportResult> {
     // TODO(Milestone 2): read file as Blob, validate, generate thumbnail, save
     if (!SUPPORTED_TYPES.includes(_file.type as MemeMimeType)) {
       throw new UnsupportedFileTypeError();
@@ -32,6 +34,11 @@ export class ImportService {
     }
     const normalizedImage = await normalizeImportedImage(_file);
     const { blob, mimeType } = normalizedImage;
+    const { contentHash, duplicate, duplicateKind, perceptualHash } = await duplicateService.checkBlob(blob);
+    if (duplicate) {
+      return { status: 'duplicate', memeId: duplicate.id, duplicateKind: duplicateKind ?? 'exact' };
+    }
+
     const id = generateId();
     const timestamp = now();
 
@@ -60,6 +67,8 @@ export class ImportService {
       originalBlobId: blobId,
       thumbnailBlobId: thumbId,
       mimeType,
+      contentHash,
+      perceptualHash,
       sizeBytes: blob.size,
       favorite: false,
       status: 'inbox' as const,
@@ -68,7 +77,7 @@ export class ImportService {
       updatedAt: timestamp,
     });
 
-    return id;
+    return { status: 'imported', memeId: id };
   }
 
   async importFromClipboard(_blob: Blob, _mimeType: MemeMimeType): Promise<string> {

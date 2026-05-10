@@ -4,6 +4,8 @@ import { generateId, now } from '@/shared/utils/id';
 import { MAX_IMAGE_SIZE } from '@/shared/constants';
 import type { MemeMimeType } from '@/features/memes/types/meme.types';
 import { normalizeImportedImage } from '@/features/import/utils/image-normalizer';
+import { duplicateService } from '@/features/import/services/duplicate.service';
+import type { MemeImportResult } from '@/features/import';
 
 const SUPPORTED_MIME_TYPES: MemeMimeType[] = ['image/png', 'image/jpeg', 'image/webp'];
 
@@ -165,7 +167,7 @@ function notifyTab(tabId: number | undefined, success: boolean, message: string)
   );
 }
 
-async function potImage(srcUrl: string, pageUrl?: string, tabId?: number): Promise<string> {
+async function potImage(srcUrl: string, pageUrl?: string, tabId?: number): Promise<MemeImportResult> {
   console.log('[Memepot] Potting image:', srcUrl);
 
   const image = await readPottedImage(srcUrl, pageUrl, tabId);
@@ -176,6 +178,10 @@ async function potImage(srcUrl: string, pageUrl?: string, tabId?: number): Promi
   }
 
   const { blob, mimeType } = await normalizeImportedImage(image.blob);
+  const { contentHash, duplicate, duplicateKind, perceptualHash } = await duplicateService.checkBlob(blob);
+  if (duplicate) {
+    return { status: 'duplicate', memeId: duplicate.id, duplicateKind: duplicateKind ?? 'exact' };
+  }
 
   const timestamp = now();
   const memeId = generateId();
@@ -225,6 +231,8 @@ async function potImage(srcUrl: string, pageUrl?: string, tabId?: number): Promi
     originalBlobId: blobId,
     thumbnailBlobId: thumbId,
     mimeType,
+    contentHash,
+    perceptualHash,
     sizeBytes: blob.size,
     favorite: false,
     status: 'inbox',
@@ -234,7 +242,7 @@ async function potImage(srcUrl: string, pageUrl?: string, tabId?: number): Promi
   });
 
   console.log('[Memepot] Meme saved to Tempot:', memeId);
-  return memeId;
+  return { status: 'imported', memeId };
 }
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
@@ -242,7 +250,15 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
     const tabId = tab?.id;
 
     potImage(info.srcUrl, info.pageUrl, tabId)
-      .then(() => notifyTab(tabId, true, 'Saved to Tempot.'))
+      .then((result) => {
+        const message =
+          result.status === 'duplicate'
+            ? result.duplicateKind === 'similar'
+              ? 'Similar meme already in Memepot.'
+              : 'Already in Memepot.'
+            : 'Saved to Tempot.';
+        notifyTab(tabId, true, message);
+      })
       .catch((error: unknown) => {
         const message = error instanceof Error ? error.message : 'Could not save this image.';
         console.error('[Memepot] Pot image failed:', error);

@@ -14,6 +14,18 @@ export class MemepotDB extends Dexie {
       memeBlobs: 'id, memeId',
       memeThumbnails: 'id, memeId',
     });
+    this.version(2).stores({
+      memes:
+        'id, title, category, status, favorite, sourceType, sourceDomain, contentHash, usageCount, createdAt, updatedAt, lastUsedAt, *tags',
+      memeBlobs: 'id, memeId',
+      memeThumbnails: 'id, memeId',
+    });
+    this.version(3).stores({
+      memes:
+        'id, title, category, status, favorite, sourceType, sourceDomain, contentHash, perceptualHash, usageCount, createdAt, updatedAt, lastUsedAt, *tags',
+      memeBlobs: 'id, memeId',
+      memeThumbnails: 'id, memeId',
+    });
   }
 }
 

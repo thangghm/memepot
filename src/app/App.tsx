@@ -29,6 +29,7 @@ export default function App({ children }: AppProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshToken, setRefreshToken] = useState(0);
   const [importError, setImportError] = useState<string | null>(null);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { importFiles, importing } = useImport();
 
@@ -54,11 +55,25 @@ export default function App({ children }: AppProps) {
     }
 
     setImportError(null);
+    setImportMessage(null);
     try {
-      await importFiles(files);
-      setActiveView('tempot');
-      setLastContentView('tempot');
-      setRefreshToken((value) => value + 1);
+      const results = await importFiles(files);
+      const importedCount = results.filter((result) => result.status === 'imported').length;
+      const duplicateCount = results.filter((result) => result.status === 'duplicate').length;
+
+      if (importedCount > 0) {
+        setActiveView('tempot');
+        setLastContentView('tempot');
+        setRefreshToken((value) => value + 1);
+      }
+
+      if (duplicateCount > 0) {
+        setImportMessage(
+          importedCount > 0
+            ? `Imported ${importedCount}. Skipped ${duplicateCount} duplicate${duplicateCount === 1 ? '' : 's'}.`
+            : `Skipped ${duplicateCount} duplicate${duplicateCount === 1 ? '' : 's'}.`,
+        );
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to import selected images.';
       console.error('[App] Import failed:', error);
@@ -123,6 +138,11 @@ export default function App({ children }: AppProps) {
       {importError && (
         <p className="relative z-10 mt-2 text-xs text-red-600" role="alert">
           {importError}
+        </p>
+      )}
+      {importMessage && (
+        <p className="relative z-10 mt-2 text-xs text-memepot-primary" role="status">
+          {importMessage}
         </p>
       )}
 

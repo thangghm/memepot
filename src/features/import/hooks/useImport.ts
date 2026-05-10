@@ -1,6 +1,7 @@
 // useImport hook — stub
 import { useState } from 'react';
 import { importService } from '../services/import.service';
+import type { MemeImportResult } from '../types/import-result.types';
 
 export function useImport() {
   const [importing, setImporting] = useState(false);
@@ -8,12 +9,12 @@ export function useImport() {
   async function importFiles(files: File[]) {
     setImporting(true);
     try {
-      const ids: string[] = [];
+      const results: MemeImportResult[] = [];
       for (const file of files) {
-        const id = await importService.importFromFile(file);
-        ids.push(id);
+        const result = await importService.importFromFile(file);
+        results.push(result);
       }
-      return ids;
+      return results;
     } finally {
       setImporting(false);
     }
