@@ -27,6 +27,13 @@ export function SettingsPage() {
     [update],
   );
 
+  const handleConfirmBeforePermanentDeleteChange = useCallback(
+    (checked: boolean) => {
+      void update({ confirmBeforePermanentDelete: checked });
+    },
+    [update],
+  );
+
   if (loading) {
     return (
       <div className="h-full animate-pulse rounded-[10px] bg-memepot-neutral-2" aria-label="Loading settings">
@@ -59,6 +66,16 @@ export function SettingsPage() {
             checked={settings?.showTags ?? true}
             onChange={(event) => handleShowTagsChange(event.target.checked)}
             className="size-8 appearance-none rounded-[5px] border-2 border-memepot-primary bg-white checked:bg-memepot-primary checked:bg-[linear-gradient(135deg,transparent_38%,white_38%,white_50%,transparent_50%),linear-gradient(45deg,transparent_48%,white_48%,white_60%,transparent_60%)] focus:outline-none focus:ring-2 focus:ring-memepot-primary/30"
+          />
+        </label>
+
+        <label className="flex items-center justify-between gap-3 px-2.5 text-lg leading-none">
+          <span>Confirm Trash delete</span>
+          <input
+            type="checkbox"
+            checked={settings?.confirmBeforePermanentDelete ?? true}
+            onChange={(event) => handleConfirmBeforePermanentDeleteChange(event.target.checked)}
+            className="size-8 shrink-0 appearance-none rounded-[5px] border-2 border-memepot-primary bg-white checked:bg-memepot-primary checked:bg-[linear-gradient(135deg,transparent_38%,white_38%,white_50%,transparent_50%),linear-gradient(45deg,transparent_48%,white_48%,white_60%,transparent_60%)] focus:outline-none focus:ring-2 focus:ring-memepot-primary/30"
           />
         </label>
 

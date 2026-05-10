@@ -35,6 +35,7 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
     medium: 'grid-cols-3',
     large: 'grid-cols-2',
   }[settings?.gridSize ?? 'small'];
+  const shouldConfirmPermanentDelete = settings?.confirmBeforePermanentDelete ?? true;
   const contextMeme = contextMenu ? memes.find((meme) => meme.id === contextMenu.memeId) : null;
 
   useEffect(() => {
@@ -133,7 +134,7 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
     setContextMenu(null);
 
     if (meme.status === 'trash') {
-      if (!window.confirm('Delete this meme permanently?')) {
+      if (shouldConfirmPermanentDelete && !window.confirm('Delete this meme permanently?')) {
         return;
       }
 
@@ -162,7 +163,11 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
       return;
     }
 
-    if (trashItems.length > 0 && !window.confirm(`Delete ${trashItems.length} meme(s) permanently?`)) {
+    if (
+      trashItems.length > 0 &&
+      shouldConfirmPermanentDelete &&
+      !window.confirm(`Delete ${trashItems.length} meme(s) permanently?`)
+    ) {
       return;
     }
 

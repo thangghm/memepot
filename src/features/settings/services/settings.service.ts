@@ -9,6 +9,7 @@ export interface Settings {
   maxImageSize: number;
   closeAfterCopy: boolean;
   showTags: boolean;
+  confirmBeforePermanentDelete: boolean;
 }
 
 const DEFAULTS: Settings = {
@@ -19,6 +20,7 @@ const DEFAULTS: Settings = {
   maxImageSize: 20 * 1024 * 1024,
   closeAfterCopy: false,
   showTags: true,
+  confirmBeforePermanentDelete: true,
 };
 
 export class SettingsService {
