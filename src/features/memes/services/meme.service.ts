@@ -3,7 +3,7 @@ import { db } from '@/shared/db';
 import type { Meme, MemeFilter, MemeStats } from '../types/meme.types';
 import { generateId, now } from '@/shared/utils/id';
 
-const TEMPOT_AUTO_CLEAR_MS = 48 * 60 * 60 * 1000;
+const AUTO_DELETE_MS = 48 * 60 * 60 * 1000;
 
 export class MemeService {
   async create(_data: Omit<Meme, 'id' | 'createdAt' | 'updatedAt' | 'usageCount' | 'favorite' | 'status'>): Promise<string> {
@@ -56,7 +56,7 @@ export class MemeService {
   }
 
   async getAll(_filter?: MemeFilter): Promise<Meme[]> {
-    await this.clearExpiredTempotMemes();
+    await this.clearExpiredMemes();
 
     let collection = db.memes.toCollection();
     if (_filter?.status) {
@@ -70,7 +70,7 @@ export class MemeService {
   }
 
   async getStats(): Promise<MemeStats> {
-    await this.clearExpiredTempotMemes();
+    await this.clearExpiredMemes();
 
     const all = await db.memes.toArray();
     return {
@@ -108,13 +108,21 @@ export class MemeService {
     return thumb?.blob;
   }
 
-  private async clearExpiredTempotMemes(): Promise<void> {
-    const expiresBefore = Date.now() - TEMPOT_AUTO_CLEAR_MS;
-    const expiredMemes = await db.memes
-      .where('status')
-      .equals('inbox')
-      .filter((meme) => new Date(meme.createdAt).getTime() <= expiresBefore)
-      .toArray();
+  private async clearExpiredMemes(): Promise<void> {
+    const expiresBefore = Date.now() - AUTO_DELETE_MS;
+    const [expiredInboxMemes, expiredTrashMemes] = await Promise.all([
+      db.memes
+        .where('status')
+        .equals('inbox')
+        .filter((meme) => new Date(meme.createdAt).getTime() <= expiresBefore)
+        .toArray(),
+      db.memes
+        .where('status')
+        .equals('trash')
+        .filter((meme) => new Date(meme.updatedAt).getTime() <= expiresBefore)
+        .toArray(),
+    ]);
+    const expiredMemes = [...expiredInboxMemes, ...expiredTrashMemes];
 
     if (expiredMemes.length === 0) {
       return;
