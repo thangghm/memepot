@@ -1,6 +1,6 @@
 // Error classes for the extension
 export class UnsupportedFileTypeError extends Error {
-  constructor(message = 'Unsupported file type. Please use PNG, JPEG, WebP, or GIF.') {
+  constructor(message = 'Unsupported file type. Please use PNG, JPEG, or WebP.') {
     super(message);
     this.name = 'UnsupportedFileTypeError';
   }

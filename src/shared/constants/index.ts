@@ -1,4 +1,6 @@
 export const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20 MB
+export const MEME_IMAGE_MAX_DIMENSION = 1024;
+export const MEME_WEBP_QUALITY = 0.85;
 export const THUMBNAIL_MAX_WIDTH = 320;
 export const THUMBNAIL_MAX_HEIGHT = 320;
 export const DEFAULT_COPY_FORMAT = 'image/png';

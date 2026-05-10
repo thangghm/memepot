@@ -2,7 +2,7 @@ import type { MemeStatus, MemeCategory } from '@/shared/types/common.types';
 export type { MemeStatus, MemeCategory } from '@/shared/types/common.types';
 export type MemeSourceType = 'web' | 'import' | 'clipboard';
 
-export type MemeMimeType = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif';
+export type MemeMimeType = 'image/png' | 'image/jpeg' | 'image/webp';
 
 export interface Meme {
   id: string;

@@ -1,5 +1,5 @@
 // Core shared types used across the extension
-export type MimeType = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif';
+export type MimeType = 'image/png' | 'image/jpeg' | 'image/webp';
 export type SourceType = 'web' | 'import' | 'clipboard';
 export type MemeStatus = 'inbox' | 'active' | 'trash';
 export type MemeCategory =

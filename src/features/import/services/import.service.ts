@@ -5,8 +5,9 @@ import { generateId, now } from '@/shared/utils/id';
 import { ThumbnailService } from './thumbnail.service';
 import { MAX_IMAGE_SIZE } from '@/shared/constants';
 import { UnsupportedFileTypeError, ImageTooLargeError, ImageFetchFailedError } from '@/shared/errors';
+import { normalizeImportedImage } from '../utils/image-normalizer';
 
-const SUPPORTED_TYPES: MemeMimeType[] = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+const SUPPORTED_TYPES: MemeMimeType[] = ['image/png', 'image/jpeg', 'image/webp'];
 
 export class ImportService {
   private thumbnailService = new ThumbnailService();
@@ -29,8 +30,8 @@ export class ImportService {
     if (_file.size > MAX_IMAGE_SIZE) {
       throw new ImageTooLargeError();
     }
-    const blob = _file;
-    const mimeType = _file.type as MemeMimeType;
+    const normalizedImage = await normalizeImportedImage(_file);
+    const { blob, mimeType } = normalizedImage;
     const id = generateId();
     const timestamp = now();
 

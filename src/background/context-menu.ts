@@ -2,6 +2,26 @@
 import { db } from '@/shared/db';
 import { generateId, now } from '@/shared/utils/id';
 import { MAX_IMAGE_SIZE } from '@/shared/constants';
+import type { MemeMimeType } from '@/features/memes/types/meme.types';
+import { normalizeImportedImage } from '@/features/import/utils/image-normalizer';
+
+const SUPPORTED_MIME_TYPES: MemeMimeType[] = ['image/png', 'image/jpeg', 'image/webp'];
+
+interface ImageDataPayload {
+  dataUrl: string;
+  mimeType?: string;
+}
+
+interface ContentImageResponse {
+  success: boolean;
+  payload?: ImageDataPayload;
+  error?: string;
+}
+
+interface PottedImage {
+  blob: Blob;
+  mimeType: MemeMimeType;
+}
 
 export function setupContextMenu() {
   chrome.contextMenus.removeAll(() => {
@@ -13,35 +33,149 @@ export function setupContextMenu() {
   });
 }
 
-async function potImage(srcUrl: string, pageUrl?: string) {
-  console.log('[Memepot] Potting image:', srcUrl);
+function getSupportedMimeType(value?: string | null): MemeMimeType | null {
+  const normalized = value?.split(';')[0]?.trim().toLowerCase();
+
+  if (normalized === 'image/jpg') {
+    return 'image/jpeg';
+  }
+
+  if (SUPPORTED_MIME_TYPES.includes(normalized as MemeMimeType)) {
+    return normalized as MemeMimeType;
+  }
+
+  return null;
+}
+
+function inferMimeTypeFromUrl(srcUrl: string): MemeMimeType | null {
+  try {
+    const pathname = new URL(srcUrl).pathname.toLowerCase();
+    if (pathname.endsWith('.png')) return 'image/png';
+    if (pathname.endsWith('.jpg') || pathname.endsWith('.jpeg')) return 'image/jpeg';
+    if (pathname.endsWith('.webp')) return 'image/webp';
+  } catch {
+    // Data and blob URLs do not always parse into useful pathnames.
+  }
+
+  return null;
+}
+
+function resolveMimeType(blob: Blob, srcUrl: string, headerMimeType?: string | null): MemeMimeType {
+  const mimeType =
+    getSupportedMimeType(headerMimeType) ??
+    getSupportedMimeType(blob.type) ??
+    inferMimeTypeFromUrl(srcUrl);
+
+  if (!mimeType) {
+    throw new Error('Unsupported image type. Use PNG, JPEG, or WebP.');
+  }
+
+  return mimeType;
+}
+
+async function blobFromDataUrl(dataUrl: string): Promise<Blob> {
+  const response = await fetch(dataUrl);
+  return response.blob();
+}
+
+async function fetchImageFromContentScript(tabId: number, srcUrl: string): Promise<PottedImage | null> {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(
+      tabId,
+      { type: 'MEMEPOT_FETCH_IMAGE', payload: { srcUrl } },
+      async (response: ContentImageResponse | undefined) => {
+        const runtimeError = chrome.runtime.lastError;
+        if (runtimeError || !response?.success || !response.payload?.dataUrl) {
+          if (runtimeError) {
+            console.warn('[Memepot] Content image fetch unavailable:', runtimeError.message);
+          } else if (response?.error) {
+            console.warn('[Memepot] Content image fetch failed:', response.error);
+          }
+          resolve(null);
+          return;
+        }
+
+        try {
+          const blob = await blobFromDataUrl(response.payload.dataUrl);
+          resolve({
+            blob,
+            mimeType: resolveMimeType(blob, srcUrl, response.payload.mimeType),
+          });
+        } catch (error) {
+          console.warn('[Memepot] Content image payload could not be decoded:', error);
+          resolve(null);
+        }
+      },
+    );
+  });
+}
+
+async function fetchImageFromBackground(srcUrl: string, pageUrl?: string): Promise<PottedImage> {
+  const requestInit: RequestInit = {
+    credentials: 'include',
+  };
+
+  if (pageUrl) {
+    requestInit.referrer = pageUrl;
+    requestInit.referrerPolicy = 'strict-origin-when-cross-origin';
+  }
 
   let response: Response;
   try {
-    response = await fetch(srcUrl);
+    response = await fetch(srcUrl, requestInit);
   } catch (err) {
-    console.error('[Memepot] Fetch failed:', err);
-    console.warn('[Memepot] Fetch failed — image may be blocked by CORS');
-    return;
+    console.error('[Memepot] Background fetch failed:', err);
+    throw new Error('Could not read this image from the page.');
   }
 
   if (!response.ok) {
-    console.error('[Memepot] HTTP error:', response.status);
-    return;
+    console.error('[Memepot] Background fetch HTTP error:', response.status);
+    throw new Error(`Could not read this image (${response.status}).`);
   }
 
   const blob = await response.blob();
-  const mimeType = response.headers.get('content-type') || blob.type || 'image/png';
+  return {
+    blob,
+    mimeType: resolveMimeType(blob, srcUrl, response.headers.get('content-type')),
+  };
+}
 
-  if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(mimeType)) {
-    console.error('[Memepot] Unsupported MIME type:', mimeType);
+async function readPottedImage(srcUrl: string, pageUrl?: string, tabId?: number): Promise<PottedImage> {
+  if (tabId !== undefined) {
+    const pageImage = await fetchImageFromContentScript(tabId, srcUrl);
+    if (pageImage) {
+      return pageImage;
+    }
+  }
+
+  return fetchImageFromBackground(srcUrl, pageUrl);
+}
+
+function notifyTab(tabId: number | undefined, success: boolean, message: string) {
+  if (tabId === undefined) {
     return;
   }
 
-  if (blob.size > MAX_IMAGE_SIZE) {
-    console.error('[Memepot] Image too large:', blob.size);
-    return;
+  chrome.tabs.sendMessage(
+    tabId,
+    { type: 'MEMEPOT_POT_IMAGE_RESULT', payload: { success, message } },
+    () => {
+      void chrome.runtime.lastError;
+    },
+  );
+}
+
+async function potImage(srcUrl: string, pageUrl?: string, tabId?: number): Promise<string> {
+  console.log('[Memepot] Potting image:', srcUrl);
+
+  const image = await readPottedImage(srcUrl, pageUrl, tabId);
+
+  if (image.blob.size > MAX_IMAGE_SIZE) {
+    console.error('[Memepot] Image too large:', image.blob.size);
+    throw new Error('Image is too large. Maximum size is 20 MB.');
   }
+
+  const { blob, mimeType } = await normalizeImportedImage(image.blob);
 
   const timestamp = now();
   const memeId = generateId();
@@ -63,7 +197,7 @@ async function potImage(srcUrl: string, pageUrl?: string) {
     id: blobId,
     memeId,
     blob,
-    mimeType: mimeType as 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif',
+    mimeType,
     sizeBytes: blob.size,
     createdAt: timestamp,
   });
@@ -90,7 +224,7 @@ async function potImage(srcUrl: string, pageUrl?: string) {
     pageUrl,
     originalBlobId: blobId,
     thumbnailBlobId: thumbId,
-    mimeType: mimeType as 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif',
+    mimeType,
     sizeBytes: blob.size,
     favorite: false,
     status: 'inbox',
@@ -100,10 +234,19 @@ async function potImage(srcUrl: string, pageUrl?: string) {
   });
 
   console.log('[Memepot] Meme saved to Tempot:', memeId);
+  return memeId;
 }
 
-chrome.contextMenus.onClicked.addListener((info) => {
+chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'memepot-pot-image' && info.srcUrl) {
-    potImage(info.srcUrl, info.pageUrl);
+    const tabId = tab?.id;
+
+    potImage(info.srcUrl, info.pageUrl, tabId)
+      .then(() => notifyTab(tabId, true, 'Saved to Tempot.'))
+      .catch((error: unknown) => {
+        const message = error instanceof Error ? error.message : 'Could not save this image.';
+        console.error('[Memepot] Pot image failed:', error);
+        notifyTab(tabId, false, message);
+      });
   }
 });

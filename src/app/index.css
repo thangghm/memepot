@@ -12,8 +12,6 @@
 
 body {
   @apply m-0 bg-memepot-neutral-1 p-0 font-memepot text-memepot-back;
-  width: 400px;
-  height: 600px;
 }
 
 .memepot-scroll {

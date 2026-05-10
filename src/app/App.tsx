@@ -85,7 +85,7 @@ export default function App({ children }: AppProps) {
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
+          accept="image/png,image/jpeg,image/webp"
           multiple
           className="hidden"
           onChange={handleFileChange}
@@ -166,7 +166,7 @@ export default function App({ children }: AppProps) {
               className="h-[16px] w-[104px]"
             />
           </div>
-          <span className="text-lg leading-none text-memepot-back">V1.04</span>
+          <span className="text-lg leading-none text-memepot-back">V{__APP_VERSION__}</span>
         </footer>
       </div>
 

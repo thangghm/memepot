@@ -6,6 +6,9 @@ import { readdirSync, copyFileSync, mkdirSync, readFileSync, writeFileSync } fro
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dist = (...segments: string[]) => path.join(__dirname, 'dist', ...segments);
+const packageJson = JSON.parse(readFileSync(path.join(__dirname, 'package.json'), 'utf8')) as {
+  version: string;
+};
 
 export default defineConfig({
   plugins: [
@@ -46,6 +49,9 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
+  },
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
   },
   base: './',
   build: {
