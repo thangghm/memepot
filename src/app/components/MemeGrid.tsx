@@ -94,6 +94,13 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
   };
 
   const handleCopy = (memeId: string) => {
+    const meme = memes.find((item) => item.id === memeId);
+    if (meme?.status === 'trash') {
+      setActionMessage(null);
+      setActionError('Restore this meme before copying.');
+      return;
+    }
+
     void (async () => {
       setActionError(null);
       setActionMessage(null);

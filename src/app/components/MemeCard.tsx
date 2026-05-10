@@ -24,6 +24,7 @@ export function MemeCard({
   showTags = true,
 }: MemeCardProps) {
   const imgSrc = useThumbnail(meme.id);
+  const canCopy = meme.status !== 'trash';
 
   return (
     <div
@@ -37,9 +38,16 @@ export function MemeCard({
     >
       <button
         type="button"
-        onClick={() => onCopy(meme.id)}
-        className="relative flex size-full items-center justify-center overflow-hidden rounded-lg bg-white outline-none focus:ring-2 focus:ring-memepot-primary"
-        title="Copy meme"
+        onClick={() => {
+          if (canCopy) {
+            onCopy(meme.id);
+          }
+        }}
+        aria-disabled={!canCopy}
+        className={`relative flex size-full items-center justify-center overflow-hidden rounded-lg bg-white outline-none focus:ring-2 focus:ring-memepot-primary ${
+          canCopy ? '' : 'cursor-default'
+        }`}
+        title={canCopy ? 'Copy meme' : 'Restore meme to copy'}
       >
         {imgSrc ? (
           <img src={imgSrc} alt="Saved meme" className="size-full object-cover" />

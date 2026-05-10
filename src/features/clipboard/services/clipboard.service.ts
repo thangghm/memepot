@@ -7,6 +7,7 @@ import { imageToBlob } from '../utils/image-converter';
 export class ClipboardService {
   async copyImage(memeId: string): Promise<void> {
     // TODO(Milestone 6): load blob, write to clipboard, update usage
+    await this.assertCopyable(memeId);
     const blob = await db.memeBlobs.where('memeId').equals(memeId).first();
     if (!blob) throw new ClipboardWriteFailedError();
     const clipboardBlob =
@@ -16,6 +17,7 @@ export class ClipboardService {
   }
 
   async copyAsPng(memeId: string): Promise<void> {
+    await this.assertCopyable(memeId);
     const blob = await db.memeBlobs.where('memeId').equals(memeId).first();
     if (!blob) throw new ClipboardWriteFailedError();
     const pngBlob = await imageToBlob(blob.blob, 'image/png');
@@ -24,6 +26,7 @@ export class ClipboardService {
   }
 
   async copyAsJpg(memeId: string): Promise<void> {
+    await this.assertCopyable(memeId);
     const blob = await db.memeBlobs.where('memeId').equals(memeId).first();
     if (!blob) throw new ClipboardWriteFailedError();
     const jpgBlob = await imageToBlob(blob.blob, 'image/jpeg');
@@ -36,6 +39,13 @@ export class ClipboardService {
       await navigator.clipboard.write([new ClipboardItem({ [_blob.type]: _blob })]);
     } catch {
       throw new ClipboardWriteFailedError();
+    }
+  }
+
+  private async assertCopyable(memeId: string): Promise<void> {
+    const meme = await memeService.getById(memeId);
+    if (meme?.status === 'trash') {
+      throw new ClipboardWriteFailedError('Restore this meme before copying.');
     }
   }
 }
