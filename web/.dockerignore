@@ -1,0 +1,8 @@
+dist
+node_modules
+vite-dev.err
+vite-dev.log
+.git
+.gitignore
+Dockerfile
+docker-compose.yml

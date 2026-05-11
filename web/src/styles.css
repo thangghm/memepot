@@ -1,0 +1,130 @@
+@font-face {
+  font-family: 'Gveret Levin';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/src/assets/fonts/GveretLevin-Regular.woff2') format('woff2');
+}
+
+:root {
+  color: #000000;
+  background: #ffffff;
+  font-family: 'Gveret Levin', cursive;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+img {
+  display: block;
+}
+
+.landing-page {
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.landing-frame {
+  width: min(100%, 1200px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 106px 24px 42px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.brand-lockup {
+  height: 94px;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+
+.brand-logo {
+  width: 178px;
+  height: 178px;
+  object-fit: contain;
+}
+
+.brand-copy {
+  width: 274px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.brand-wordmark {
+  width: 272px;
+  max-width: 100%;
+  height: 43px;
+}
+
+.brand-tagline {
+  width: 100%;
+  margin: 0;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.coming-soon {
+  margin: 164px 0 0;
+  font-size: 96px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+.copyright {
+  margin: 306px 0 0;
+  color: #0000ff;
+  font-size: 18px;
+  line-height: 1;
+  text-transform: capitalize;
+}
+
+@media (max-width: 640px) {
+  .landing-frame {
+    padding-top: 48px;
+  }
+
+  .brand-lockup {
+    height: auto;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .brand-logo {
+    width: 128px;
+    height: 128px;
+  }
+
+  .brand-copy {
+    max-width: 100%;
+    align-items: center;
+  }
+
+  .coming-soon {
+    margin-top: 80px;
+    font-size: clamp(56px, 17vw, 96px);
+  }
+
+  .copyright {
+    margin-top: auto;
+    padding-top: 96px;
+  }
+}
