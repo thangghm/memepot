@@ -23,6 +23,7 @@ export function Routes({ activeView, refreshToken, searchQuery }: RoutesProps) {
           options={{ favorite: true, query: searchQuery, status: 'active' }}
           emptyMessage="No Hot memes yet."
           sortable
+          variant="hotpot"
         />
       );
     case 'hotpot':
@@ -33,6 +34,7 @@ export function Routes({ activeView, refreshToken, searchQuery }: RoutesProps) {
           options={{ favorite: true, query: searchQuery, status: 'active' }}
           emptyMessage="No HotPot memes yet."
           sortable
+          variant="hotpot"
         />
       );
     case 'trash':
@@ -42,6 +44,7 @@ export function Routes({ activeView, refreshToken, searchQuery }: RoutesProps) {
           refreshToken={refreshToken}
           options={{ status: 'trash', includeTrash: true, query: searchQuery, sort: 'created' }}
           emptyMessage="Trash is empty."
+          variant="trash"
         />
       );
     case 'settings':

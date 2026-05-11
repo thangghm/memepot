@@ -38,7 +38,8 @@ export function PotPage({ refreshToken, searchQuery }: PotPageProps) {
       <MemeGrid
         memes={memes}
         onChanged={refresh}
-        emptyMessage={searchQuery ? 'No Pot memes match your search.' : 'No tagged memes yet.'}
+        variant="pot"
+        emptyMessage={searchQuery ? 'No Pot memes match your search.' : 'Empty POT'}
       />
     </div>
   );

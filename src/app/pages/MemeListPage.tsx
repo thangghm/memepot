@@ -10,6 +10,7 @@ interface MemeListPageProps {
   options?: UseMemesOptions;
   emptyMessage?: string;
   sortable?: boolean;
+  variant?: 'pot' | 'hotpot' | 'trash';
 }
 
 export function MemeListPage({
@@ -18,6 +19,7 @@ export function MemeListPage({
   options = {},
   emptyMessage,
   sortable = false,
+  variant = 'pot',
 }: MemeListPageProps) {
   const [sortPreset, setSortPreset] = useState<MemeSortPreset>('mostCopied');
   const sortOptions = sortable ? getSortOptions(sortPreset) : {};
@@ -42,7 +44,7 @@ export function MemeListPage({
   return (
     <div>
       {sortable && <SortControls value={sortPreset} onChange={setSortPreset} />}
-      <MemeGrid memes={memes} onChanged={refresh} emptyMessage={emptyMessage} />
+      <MemeGrid memes={memes} onChanged={refresh} emptyMessage={emptyMessage} variant={variant} />
     </div>
   );
 }

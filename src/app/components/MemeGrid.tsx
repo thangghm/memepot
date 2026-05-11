@@ -1,27 +1,23 @@
 import { useEffect, useState } from 'react';
-import { RotateCcw } from 'lucide-react';
 import { MemeCard } from './MemeCard';
 import type { Meme, MemeStatus } from '@/features/memes/types/meme.types';
 import { useMemeActions } from '../hooks/useMemeActions';
 import { useSettings } from '../hooks/useSettings';
 import { TagMemeModal } from './TagMemeModal';
-import favoriteIcon from '../assets/figma/action-favorite.svg';
-import tagIcon from '../assets/figma/action-tag.svg';
-import trashIcon from '../assets/figma/action-trash.svg';
 
 interface MemeGridProps {
   memes?: Meme[];
   emptyMessage?: string;
   onChanged?: () => void | Promise<void>;
+  variant?: 'tempot' | 'pot' | 'hotpot' | 'trash';
 }
 
-interface ContextMenuState {
-  memeId: string;
-  x: number;
-  y: number;
-}
-
-export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some!', onChanged }: MemeGridProps) {
+export function MemeGrid({
+  memes = [],
+  emptyMessage = 'No memes yet. Import some!',
+  onChanged,
+  variant = 'pot',
+}: MemeGridProps) {
   const actions = useMemeActions();
   const { settings } = useSettings();
   const [taggingMeme, setTaggingMeme] = useState<Meme | null>(null);
@@ -29,33 +25,20 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
   const [actionError, setActionError] = useState<string | null>(null);
   const [copiedMemeId, setCopiedMemeId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
   const gridClassName = {
     small: 'grid-cols-4',
     medium: 'grid-cols-3',
     large: 'grid-cols-2',
   }[settings?.gridSize ?? 'small'];
   const shouldConfirmPermanentDelete = settings?.confirmBeforePermanentDelete ?? true;
-  const contextMeme = contextMenu ? memes.find((meme) => meme.id === contextMenu.memeId) : null;
+  const canTagFromCard = variant === 'tempot' || variant === 'pot' || variant === 'hotpot';
+  const canKickFromCard = variant === 'tempot' || variant === 'pot' || variant === 'hotpot' || variant === 'trash';
+  const canMakeHotFromCard = variant === 'pot' || variant === 'hotpot';
+  const canRestoreFromCard = variant === 'trash';
 
   useEffect(() => {
     setSelectedIds((ids) => ids.filter((id) => memes.some((meme) => meme.id === id)));
   }, [memes]);
-
-  useEffect(() => {
-    if (!contextMenu) {
-      return;
-    }
-
-    const close = () => setContextMenu(null);
-    window.addEventListener('click', close);
-    window.addEventListener('scroll', close, true);
-
-    return () => {
-      window.removeEventListener('click', close);
-      window.removeEventListener('scroll', close, true);
-    };
-  }, [contextMenu]);
 
   const refresh = async () => {
     await onChanged?.();
@@ -91,7 +74,6 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
     if (meme) {
       setTaggingMeme(meme);
     }
-    setContextMenu(null);
   };
 
   const handleCopy = (memeId: string) => {
@@ -131,8 +113,6 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
       return;
     }
 
-    setContextMenu(null);
-
     if (meme.status === 'trash') {
       if (shouldConfirmPermanentDelete && !window.confirm('Delete this meme permanently?')) {
         return;
@@ -145,8 +125,15 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
     void runAction(() => actions.trash(memeId), 'Kicked.');
   };
 
+  const handleMakeHot = (memeId: string) => {
+    const meme = memes.find((item) => item.id === memeId);
+    void runAction(
+      () => actions.makeHot(memeId),
+      meme?.favorite ? 'Removed Hot mark.' : 'Made Hot.',
+    );
+  };
+
   const handleRestore = (memeId: string) => {
-    setContextMenu(null);
     void runAction(() => actions.restore(memeId), 'Restored.');
   };
 
@@ -248,66 +235,16 @@ export function MemeGrid({ memes = [], emptyMessage = 'No memes yet. Import some
             copied={copiedMemeId === meme.id}
             selected={selectedIds.includes(meme.id)}
             onCopy={handleCopy}
-            onContextMenu={(memeId, x, y) => setContextMenu({ memeId, x, y })}
+            onKick={canKickFromCard ? handleKick : undefined}
+            onMakeHot={canMakeHotFromCard ? handleMakeHot : undefined}
+            onRestore={canRestoreFromCard ? handleRestore : undefined}
+            onTag={canTagFromCard ? openTagEditor : undefined}
             onToggleSelect={handleToggleSelect}
+            showHotActionWhenFavorite={variant === 'pot'}
             showTags={settings?.showTags ?? true}
           />
         ))}
       </div>
-
-      {contextMenu && contextMeme && (
-        <div
-          className="fixed z-50 min-w-36 rounded-[10px] bg-white py-1 text-sm shadow-xl ring-1 ring-black/10"
-          style={{ left: contextMenu.x, top: contextMenu.y }}
-          onClick={(event) => event.stopPropagation()}
-        >
-          {contextMeme.status === 'trash' ? (
-            <button
-              type="button"
-              onClick={() => handleRestore(contextMeme.id)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-primary hover:bg-memepot-neutral-1"
-              >
-                <RotateCcw size={14} aria-hidden />
-                Restore
-            </button>
-          ) : (
-            <>
-              <button
-                type="button"
-                onClick={() => openTagEditor(contextMeme.id)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-primary hover:bg-memepot-neutral-1"
-              >
-                <img src={tagIcon} alt="" className="size-4" aria-hidden />
-                Tag
-              </button>
-              {contextMeme.status !== 'inbox' && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setContextMenu(null);
-                    void runAction(
-                      () => actions.makeHot(contextMeme.id),
-                      contextMeme.favorite ? 'Removed Hot mark.' : 'Made Hot.',
-                    );
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-primary hover:bg-memepot-neutral-1"
-                >
-                  <img src={favoriteIcon} alt="" className="size-4" aria-hidden />
-                  {contextMeme.favorite ? 'Unmake Hot' : 'Make it Hot'}
-                </button>
-              )}
-            </>
-          )}
-          <button
-            type="button"
-            onClick={() => handleKick(contextMeme.id)}
-            className="flex w-full items-center gap-2 px-3 py-2 text-left text-memepot-primary hover:bg-memepot-neutral-1"
-          >
-            <img src={trashIcon} alt="" className="size-4" aria-hidden />
-            {contextMeme.status === 'trash' ? 'Delete Forever' : 'Kick'}
-          </button>
-        </div>
-      )}
 
       {taggingMeme && (
         <TagMemeModal

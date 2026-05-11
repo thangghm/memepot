@@ -1,16 +1,23 @@
 import type { Meme } from '@/features/memes/types/meme.types';
-import { Check } from 'lucide-react';
+import { Check, RotateCcw } from 'lucide-react';
 import { useThumbnail } from '../hooks/useThumbnail';
 import copiedIcon from '../assets/figma/action-copied.svg';
 import favoriteIcon from '../assets/figma/action-favorite.svg';
+import hotIcon from '../assets/figma/action-hot.svg';
+import tagIcon from '../assets/figma/action-tag.svg';
+import trashIcon from '../assets/figma/action-trash.svg';
 
 interface MemeCardProps {
   meme: Meme;
   copied: boolean;
   selected: boolean;
   onCopy: (memeId: string) => void;
-  onContextMenu: (memeId: string, x: number, y: number) => void;
+  onKick?: (memeId: string) => void;
+  onMakeHot?: (memeId: string) => void;
+  onRestore?: (memeId: string) => void;
+  onTag?: (memeId: string) => void;
   onToggleSelect: (memeId: string) => void;
+  showHotActionWhenFavorite?: boolean;
   showTags?: boolean;
 }
 
@@ -19,22 +26,25 @@ export function MemeCard({
   copied,
   selected,
   onCopy,
-  onContextMenu,
+  onKick,
+  onMakeHot,
+  onRestore,
+  onTag,
   onToggleSelect,
+  showHotActionWhenFavorite = false,
   showTags = true,
 }: MemeCardProps) {
   const imgSrc = useThumbnail(meme.id);
   const canCopy = meme.status !== 'trash';
+  const visibleTags = meme.tags.slice(0, 4);
+  const makeHotIcon = meme.favorite ? hotIcon : favoriteIcon;
+  const shouldShowHotAction = showHotActionWhenFavorite && meme.favorite;
 
   return (
     <div
-      className={`group relative aspect-square w-full overflow-hidden rounded-lg bg-white transition-colors hover:bg-white/90 ${
+      className={`group relative aspect-square w-full rounded-[10px] bg-white transition-colors hover:bg-white/95 ${
         selected ? 'ring-2 ring-memepot-primary ring-offset-2 ring-offset-memepot-neutral-2' : ''
       }`}
-      onContextMenu={(event) => {
-        event.preventDefault();
-        onContextMenu(meme.id, event.clientX, event.clientY);
-      }}
     >
       <button
         type="button"
@@ -44,7 +54,7 @@ export function MemeCard({
           }
         }}
         aria-disabled={!canCopy}
-        className={`relative flex size-full items-center justify-center overflow-hidden rounded-lg bg-white outline-none focus:ring-2 focus:ring-memepot-primary ${
+        className={`relative flex size-full items-center justify-center overflow-hidden rounded-[10px] bg-white outline-none focus-visible:ring-2 focus-visible:ring-memepot-primary ${
           canCopy ? '' : 'cursor-default'
         }`}
         title={canCopy ? 'Copy meme' : 'Restore meme to copy'}
@@ -64,7 +74,43 @@ export function MemeCard({
         )}
       </button>
 
-      <label className="absolute left-1.5 top-1.5 flex size-5 cursor-pointer items-center justify-center rounded bg-black/70 text-white opacity-0 transition-opacity group-hover:opacity-100 has-[:checked]:opacity-100">
+      {onMakeHot && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onMakeHot(meme.id);
+          }}
+          className={`absolute right-[2%] top-1/2 z-10 flex size-[clamp(18px,22%,28px)] -translate-y-1/2 items-center justify-center rounded-full bg-memepot-neutral-1 shadow-sm transition-[opacity,transform] hover:scale-110 group-focus-within:opacity-100 group-hover:opacity-100 ${
+            shouldShowHotAction ? 'opacity-100' : 'opacity-0'
+          }`}
+          title={meme.favorite ? 'Unmake Hot' : 'Make it Hot'}
+          aria-label={meme.favorite ? 'Unmake Hot' : 'Make it Hot'}
+        >
+          <img src={makeHotIcon} alt="" className="size-[72%]" aria-hidden />
+        </button>
+      )}
+
+      {onKick && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onKick(meme.id);
+          }}
+          className="absolute right-[-5%] top-[-5%] z-10 flex size-[clamp(18px,22%,28px)] items-center justify-center rounded-full bg-white opacity-0 shadow-sm transition-[opacity,transform] hover:scale-110 group-focus-within:opacity-100 group-hover:opacity-100"
+          title={meme.status === 'trash' ? 'Delete forever' : 'Kick'}
+          aria-label={meme.status === 'trash' ? 'Delete forever' : 'Kick'}
+        >
+          <img src={trashIcon} alt="" className="size-[72%]" aria-hidden />
+        </button>
+      )}
+
+      <label
+        className={`absolute left-[4%] top-[4%] z-10 flex size-[clamp(15px,19%,24px)] cursor-pointer items-center justify-center rounded-full bg-memepot-neutral-1 text-memepot-back shadow-sm transition-[opacity,transform] hover:scale-110 group-focus-within:opacity-100 group-hover:opacity-100 ${
+          selected ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
         <input
           type="checkbox"
           checked={selected}
@@ -72,30 +118,56 @@ export function MemeCard({
           className="sr-only"
           aria-label="Select meme"
         />
-        {selected ? <Check size={14} aria-hidden /> : <span className="size-3 rounded-sm border border-white/80" />}
+        {selected ? <Check size={12} strokeWidth={3} aria-hidden /> : <span className="size-2 rounded-full bg-white" />}
       </label>
 
-      {showTags && meme.tags.length > 0 && (
-        <div className="absolute inset-x-1 bottom-1 flex min-h-5 flex-wrap gap-1">
-          {meme.tags.slice(0, 3).map((tag) => (
+      {onRestore && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRestore(meme.id);
+          }}
+          className="absolute bottom-[2%] right-[2%] z-10 flex size-[clamp(18px,22%,28px)] items-center justify-center rounded-full bg-memepot-neutral-1 text-memepot-primary opacity-0 shadow-sm transition-[opacity,transform] hover:scale-110 group-focus-within:opacity-100 group-hover:opacity-100"
+          title="Restore"
+          aria-label="Restore"
+        >
+          <RotateCcw className="size-[72%]" strokeWidth={3} aria-hidden />
+        </button>
+      )}
+
+      {onTag && (
+        <button
+          type="button"
+          onClick={(event) => {
+            event.stopPropagation();
+            onTag(meme.id);
+          }}
+          className="absolute bottom-[2%] right-[2%] z-10 flex size-[clamp(18px,22%,28px)] items-center justify-center rounded-full bg-memepot-neutral-1 opacity-0 shadow-sm transition-[opacity,transform] hover:scale-110 group-focus-within:opacity-100 group-hover:opacity-100"
+          title="Tag"
+          aria-label="Tag"
+        >
+          <img src={tagIcon} alt="" className="size-[72%]" aria-hidden />
+        </button>
+      )}
+
+      {showTags && visibleTags.length > 0 && (
+        <div className="absolute bottom-[5px] left-[3px] z-10 flex max-w-[38px] flex-col gap-0.5">
+          {visibleTags.map((tag, index) => (
             <span
-              key={tag}
-              className="rounded bg-white/90 px-1 py-0.5 text-[10px] leading-none text-memepot-primary shadow"
+              key={`${tag}-${index}`}
+              className="block h-[10px] max-w-[38px] truncate rounded-lg bg-memepot-neutral-1 px-1 text-[8px] leading-[10px] text-memepot-primary shadow-sm"
+              title={tag}
             >
-              {tag}
+              {tag || 'Tag'}
             </span>
           ))}
-          {meme.tags.length > 3 && (
-            <span className="rounded bg-white/90 px-1 py-0.5 text-[10px] leading-none text-memepot-primary shadow">
-              +{meme.tags.length - 3}
-            </span>
-          )}
         </div>
       )}
 
-      {meme.favorite && (
-        <span className="absolute right-1.5 top-1.5 rounded bg-white p-1 shadow">
-          <img src={favoriteIcon} alt="" className="size-4" aria-hidden />
+      {meme.favorite && !onMakeHot && (
+        <span className="absolute right-[2%] top-1/2 z-10 flex size-[clamp(18px,22%,28px)] -translate-y-1/2 items-center justify-center rounded-full bg-memepot-neutral-1 opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+          <img src={hotIcon} alt="" className="size-[72%]" aria-hidden />
         </span>
       )}
     </div>

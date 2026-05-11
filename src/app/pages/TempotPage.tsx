@@ -8,7 +8,7 @@ interface TempotPageProps {
 
 export function TempotPage({ refreshToken, searchQuery }: TempotPageProps) {
   const { memes, loading, refresh } = useMemes({ status: 'inbox', query: searchQuery }, refreshToken);
-  const autoClearMessage = 'TemPot auto-clear every 48h; tag them to keep longer';
+  const autoClearMessage = 'Only fresh in 48h; tag them to keep longer';
 
   if (loading) {
     return (
@@ -36,10 +36,11 @@ export function TempotPage({ refreshToken, searchQuery }: TempotPageProps) {
       <MemeGrid
         memes={memes}
         onChanged={refresh}
+        variant="tempot"
         emptyMessage={
           searchQuery
             ? 'No Tempot memes match your search.'
-            : "No memes in Tempot. Right-click an image and select 'Pot it' to get started."
+            : "Right-click an image and select 'Pot it' to get started."
         }
       />
     </div>
