@@ -6,11 +6,15 @@ export function useSettings() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const refresh = async () => {
+    setLoading(true);
+    const nextSettings = await settingsService.get();
+    setSettings(nextSettings);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    settingsService.get().then((s) => {
-      setSettings(s);
-      setLoading(false);
-    });
+    void refresh();
   }, []);
 
   const update = async (updates: Partial<Settings>) => {
@@ -18,5 +22,5 @@ export function useSettings() {
     setSettings((s) => (s ? { ...s, ...updates } : s));
   };
 
-  return { settings, loading, update };
+  return { settings, loading, refresh, update };
 }
