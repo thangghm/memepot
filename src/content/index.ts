@@ -1,5 +1,3 @@
-import { MAX_IMAGE_SIZE } from '@/shared/constants';
-
 interface FetchImageMessage {
   type: 'MEMEPOT_FETCH_IMAGE';
   payload?: {
@@ -18,8 +16,7 @@ interface PotImageResultMessage {
 type MemepotContentMessage = FetchImageMessage | PotImageResultMessage;
 
 const TOAST_ID = 'memepot-page-toast';
-
-console.log('[Memepot] Content script loaded.');
+const MAX_IMAGE_SIZE_BYTES = 20 * 1024 * 1024;
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -48,7 +45,7 @@ async function fetchImageData(srcUrl: string) {
   }
 
   const blob = await response.blob();
-  if (blob.size > MAX_IMAGE_SIZE) {
+  if (blob.size > MAX_IMAGE_SIZE_BYTES) {
     throw new Error('Image is too large. Maximum size is 20 MB.');
   }
 

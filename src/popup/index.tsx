@@ -5,7 +5,7 @@ import '@/app/index.css';
 
 // Listen for messages from the background service worker
 chrome.runtime.onMessage.addListener((message) => {
-  console.log('[Memepot Popup] Message received:', message);
+  void message;
   return false;
 });
 

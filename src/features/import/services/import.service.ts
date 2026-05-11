@@ -20,7 +20,6 @@ export class ImportService {
     _sourceType: MemeSourceType = 'web',
   ): Promise<MemeImportResult> {
     // TODO(Milestone 3): fetch URL, validate, generate thumbnail, save
-    console.log('[ImportService] importFromUrl stub:', _srcUrl);
     throw new ImageFetchFailedError();
   }
 
@@ -82,7 +81,6 @@ export class ImportService {
 
   async importFromClipboard(_blob: Blob, _mimeType: MemeMimeType): Promise<string> {
     // TODO(Milestone 2): validate, generate thumbnail, save
-    console.log('[ImportService] importFromClipboard stub, mimeType:', _mimeType);
     return '';
   }
 }

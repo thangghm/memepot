@@ -6,32 +6,26 @@ import type { Meme } from '@/features/memes/types/meme.types';
 
 export function useMemeActions() {
   const copy = useCallback(async (memeId: string) => {
-    console.log('[useMemeActions] copy:', memeId);
     await clipboardService.copyImage(memeId);
   }, []);
 
   const makeHot = useCallback(async (memeId: string) => {
-    console.log('[useMemeActions] make hot:', memeId);
     await memeService.toggleFavorite(memeId);
   }, []);
 
   const trash = useCallback(async (memeId: string) => {
-    console.log('[useMemeActions] trash:', memeId);
     await memeService.moveToTrash(memeId);
   }, []);
 
   const restore = useCallback(async (memeId: string) => {
-    console.log('[useMemeActions] restore:', memeId);
     await memeService.restore(memeId);
   }, []);
 
   const deleteMeme = useCallback(async (memeId: string) => {
-    console.log('[useMemeActions] delete:', memeId);
     await memeService.delete(memeId);
   }, []);
 
   const update = useCallback(async (memeId: string, updates: Partial<Meme>) => {
-    console.log('[useMemeActions] update:', memeId);
     await memeService.update(memeId, updates);
   }, []);
 

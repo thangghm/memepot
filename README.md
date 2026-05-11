@@ -39,7 +39,6 @@ If `pnpm build` fails because pnpm is checking or rebuilding dependencies, run t
 ```powershell
 .\node_modules\.bin\tsc.cmd
 .\node_modules\.bin\vite.cmd build
-node scripts\copy-assets.mjs
 ```
 
 The built extension is written to `dist/`.

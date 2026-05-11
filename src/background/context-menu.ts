@@ -168,8 +168,6 @@ function notifyTab(tabId: number | undefined, success: boolean, message: string)
 }
 
 async function potImage(srcUrl: string, pageUrl?: string, tabId?: number): Promise<MemeImportResult> {
-  console.log('[Memepot] Potting image:', srcUrl);
-
   const image = await readPottedImage(srcUrl, pageUrl, tabId);
 
   if (image.blob.size > MAX_IMAGE_SIZE) {
@@ -241,7 +239,6 @@ async function potImage(srcUrl: string, pageUrl?: string, tabId?: number): Promi
     updatedAt: timestamp,
   });
 
-  console.log('[Memepot] Meme saved to Tempot:', memeId);
   return { status: 'imported', memeId };
 }
 

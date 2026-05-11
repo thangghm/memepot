@@ -1,6 +1,11 @@
 node_modules/
 .pnpm-store/
 dist/
+dist*.crx
+dist*.pem
+dist*.zip
+*.err
+_tmp_*
 .env
 .env.*
 *.log

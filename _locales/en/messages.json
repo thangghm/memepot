@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Memepot",
+    "description": "Extension name"
+  },
+  "extensionDescription": {
+    "message": "A fast local meme library and meme clipboard for Chrome.",
+    "description": "Extension description shown in Chrome"
+  }
+}
